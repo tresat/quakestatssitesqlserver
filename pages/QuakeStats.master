@@ -1,0 +1,24 @@
+﻿<%@ Master Language="VB" CodeFile="QuakeStats.master.vb" Inherits="site_QuakeStats" %>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>Quake Stats Master Page</title>
+    <link type="text/css" href="../static/css/QuakeStats.css" />
+    <asp:ContentPlaceHolder id="cphHead" runat="server">
+    </asp:ContentPlaceHolder>
+</head>
+<body>
+    <form id="frmMain" runat="server">
+        <asp:LoginName ID="loginName" runat="server" />
+        &nbsp;
+        <asp:LoginStatus ID="loginStatus" runat="server" />
+        &nbsp;
+        <asp:HyperLink ID="lnkLastGame" runat="server" Text="Most Recent Game" />
+        <hr />
+        <asp:ContentPlaceHolder id="cphMain" runat="server">
+        </asp:ContentPlaceHolder>
+    </form>
+</body>
+</html>
