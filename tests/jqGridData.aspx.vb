@@ -2,7 +2,7 @@
 Option Strict On
 
 Imports System.Configuration
-Imports MySql.Data.MySqlClient
+Imports System.Data.SqlClient
 
 Partial Class pages_tests_jqGridData
     Inherits System.Web.UI.Page
@@ -50,13 +50,13 @@ Partial Class pages_tests_jqGridData
         Dim intCount As Integer
         Dim intTotalPages As Integer
         Dim intStart As Integer
-        Dim cxnDB As New MySqlConnection(ConfigurationManager.ConnectionStrings("TestDB").ConnectionString.ToString)
+        Dim cxnDB As New SqlConnection(ConfigurationManager.ConnectionStrings("TestDB").ConnectionString.ToString)
         Dim strResult As String
 
         cxnDB.Open()
 
         ' calculate the number of rows for the query. We need this for paging the result 
-        Using cmdGet As New MySqlCommand("SELECT COUNT(*) AS count FROM invheader", cxnDB)
+        Using cmdGet As New SqlCommand("SELECT COUNT(*) AS count FROM invheader", cxnDB)
             intCount = CInt(cmdGet.ExecuteScalar)
         End Using
 
@@ -79,8 +79,8 @@ Partial Class pages_tests_jqGridData
         If intStart < 0 Then intStart = 0
 
         ' the actual query for the grid data 
-        Using cmdGet As New MySqlCommand("SELECT invid, invdate, amount, tax, total, note FROM invheader ORDER BY " & mstrSidx & " " & mstrSord & " LIMIT " & intStart & " , " & mintLimit, cxnDB)
-            Using reader As MySqlDataReader = cmdGet.ExecuteReader
+        Using cmdGet As New SqlCommand("SELECT invid, invdate, amount, tax, total, note FROM invheader ORDER BY " & mstrSidx & " " & mstrSord & " LIMIT " & intStart & " , " & mintLimit, cxnDB)
+            Using reader As SqlDataReader = cmdGet.ExecuteReader
                 strResult = "<rows>"
                 strResult &= "<page>" & mintPage & "</page>"
                 strResult &= "<total>" & intTotalPages & "</total>"

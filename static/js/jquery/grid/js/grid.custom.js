@@ -51,7 +51,7 @@ $.fn.extend({
 				var sort = $t.p.colModel[idx].sortable;
 				if ( typeof sort !== 'boolean' ) { sort =  true; }
 				if ( typeof reload !=='boolean' ) { reload = false; }
-				if ( sort ) { $t.sortData(colname, idx, reload); }
+				if ( sort ) { $t.sortData("jqgh_"+colname, idx, reload); }
 			}
 		});
 	},
@@ -193,7 +193,7 @@ $.fn.extend({
 				$.each(self.p.filterModel,function(i,n){
 					switch (this.stype) {
 						case 'select' :
-							v = $("select[@name="+this.name+"]",self).val();
+							v = $("select[name="+this.name+"]",self).val();
 							if(v) {
 								sdata[this.index] = v;
 								if(self.p.marksearched){
@@ -211,7 +211,7 @@ $.fn.extend({
 							}
 							break;
 						default:
-							v = $("input[@name="+this.name+"]",self).val();
+							v = $("input[name="+this.name+"]",self).val();
 							if(v) {
 								sdata[this.index] = v;
 								if(self.p.marksearched){
@@ -251,7 +251,7 @@ $.fn.extend({
 						case 'select' :
 							if(v) {
 								var v1;
-								$("select[@name="+this.name+"] option",self).each(function (){
+								$("select[name="+this.name+"] option",self).each(function (){
 									if ($(this).text() == v) {
 										this.selected = true;
 										v1 = $(this).val();
@@ -275,7 +275,7 @@ $.fn.extend({
 							}
 							break;
 						case 'text':
-							$("input[@name="+this.name+"]",self).val(v);
+							$("input[name="+this.name+"]",self).val(v);
 							if(v) {
 								sdata[this.index] = v;
 								if(self.p.marksearched){
@@ -385,7 +385,7 @@ $.fn.extend({
 						break;
 					}
 					if(self.p.formtype=='horizontal'){
-						if(self.p.grodToolbar===true && self.p.gridNames===false) {
+						if(self.p.gridToolbar===true && self.p.gridNames===false) {
 							$(tr).append(td);
 						} else {
 							$(tr).append(tl).append(td);

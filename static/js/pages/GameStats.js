@@ -31,12 +31,12 @@ $(function() {
         sortname: 14,
         sortorder: 'desc',
         viewrecords: true,
-        imgpath: '../../static/gridThemes/basic/images',
+        imgpath: '../../static/gridThemes/redmond/images',
         caption: 'Player Statistics',
         height: 'auto',
         loadonce: true,
         postData: { idrow: 0, // unique row used as id
-            proc: 'spdpGetGameResults', // stored procedure to call (must be in approved list for user)
+            proc: 'GridProcedures.spGetGameResults', // stored procedure to call (must be in approved list for user)
             arg0: mintGameID } // all other arguments starting with 'arg' are params to proc
     });
 });

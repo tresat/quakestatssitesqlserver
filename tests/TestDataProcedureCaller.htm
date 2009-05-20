@@ -42,7 +42,7 @@
                 height: 'auto',
                 loadonce: true,
                 postData: { idrow: 1,               // unique row used as id
-                    proc: 'spdpGetGameResults',     // stored procedure to call (must be in approved list for user)
+                    proc: 'GridProcedures.spGetGameResults',     // stored procedure to call (must be in approved list for user)
                     arg0: 5009}                     // all other arguments starting with 'arg' are params to proc
                 });
             }).navGrid('#pager', { edit: false, add: false, del: false }); 

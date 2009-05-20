@@ -20,7 +20,7 @@ function createModal(aIDs, content, p, insertSelector, posSelector, appendsel) {
 	jQuery(mw).addClass("modalwin").attr("id",aIDs.themodal);
 	var mh = jQuery('<div id="'+aIDs.modalhead+'"><table width="100%"><tbody><tr><td class="modaltext">'+p.caption+'</td> <td style="text-align:right" ><a href="javascript:void(0);" class="jqmClose">'+(clicon!=''?'<img src="' + clicon + '" border="0"/>':'X') + '</a></td></tr></tbody></table> </div>').addClass("modalhead");
 	var mc = document.createElement('div');
-	jQuery(mc).addClass("modalcontent").attr("id",aIDs.modalcontent);
+	jQuery(mc).addClass("modalcontent").attr("id",aIDs.modalcontent).css("width","97%");
 	jQuery(mc).append(content);
 	mw.appendChild(mc);
 	var loading = document.createElement("div");
@@ -42,7 +42,15 @@ function createModal(aIDs, content, p, insertSelector, posSelector, appendsel) {
 	if (p.width == 0 || !p.width) {p.width = 300;}
 	if(p.height==0 || !p.width) {p.height =200;}
 	if(!p.zIndex) {p.zIndex = 950;}
-	jQuery(mw).css({top: p.top+"px",left: p.left+"px",width: p.width+"px",height: p.height+"px", zIndex:p.zIndex});
+	jQuery(mw).css({top: p.top+"px",left: p.left+"px",width: p.width+"px",height: p.height+"px", zIndex:p.zIndex})
+	.attr({tabIndex: "-1"});
+	if(p.closeOnEscape && p.closeOnEscape === true){
+		jQuery(mw).keydown( function( e ) {
+			if( e.which == 27 ) {  // escape, close box
+				hideModal(this);
+			}
+		});
+	} 
 	return false;
 };
 
@@ -83,7 +91,9 @@ function info_dialog(caption, content,c_b, pathimg) {
 		imgpath: pathimg,
 		closeicon: 'ico-close.gif',
 		left:250,
-		top:170 },
+		top:170,
+		closeOnEscape : true
+		},
 		'','',true
 	);
 	viewModal("#info_dialog",{
@@ -117,15 +127,15 @@ function isArray(obj) {
 	}
 };
 // Form Functions
-function createEl(eltype,options,vl,elm) {
+function createEl(eltype,options,vl) {
 	var elem = "";
 	switch (eltype)
 	{
 		case "textarea" :
 				elem = document.createElement("textarea");
-				if(!options.cols && elm) {jQuery(elem).css("width","99%");}
+				if(!options.cols) {jQuery(elem).css("width","98%");}
 				jQuery(elem).attr(options);
-				if(vl == "&nbsp;" || vl == "&#160;") {vl='';} // comes from grid if empty
+				if(vl=='&nbsp;' || vl=='&#160;' || (vl.length==1 && vl.charCodeAt(0)==160)) {vl="";}
 				jQuery(elem).val(vl);
 				break;
 		case "checkbox" : //what code for simple checkbox
@@ -133,7 +143,8 @@ function createEl(eltype,options,vl,elm) {
 			elem.type = "checkbox";
 			jQuery(elem).attr({id:options.id,name:options.name});
 			if( !options.value) {
-				if(vl.toLowerCase() =='on') {
+				vl=vl.toLowerCase();
+				if(vl.search(/(false|0|no|off|undefined)/i)<0 && vl!=="") {
 					elem.checked=true;
 					elem.defaultChecked=true;
 					elem.value = vl;
@@ -152,18 +163,22 @@ function createEl(eltype,options,vl,elm) {
 			}
 			break;
 		case "select" :
+			vl = jQuery.htmlDecode(vl);
 			elem = document.createElement("select");
-			var msl =  options.multiple === true ? true : false;
+			var msl = options.multiple==true ? true : false;
 			if(options.value) {
+				var ovm = [];
+				if(msl) {jQuery(elem).attr({multiple:"multiple"}); ovm = vl.split(","); ovm = jQuery.map(ovm,function(n){return jQuery.trim(n)});}
+				if(typeof options.size === 'undefined') {options.size =1;}
 				if(typeof options.value == 'string') {
 					var so = options.value.split(";"),sv, ov;
-					jQuery(elem).attr({id:options.id,name:options.name,size:Math.min(options.size,so.length), multiple:msl });
+					jQuery(elem).attr({id:options.id,name:options.name,size:Math.min(options.size,so.length)});
 					for(var i=0; i<so.length;i++){
 						sv = so[i].split(":");
 						ov = document.createElement("option");
-						ov.value = sv[0]; ov.innerHTML = $.htmlDecode(sv[1]);
+						ov.value = sv[0]; ov.innerHTML = sv[1];
 						if (!msl &&  sv[1]==vl) ov.selected ="selected";
-						if (msl && jQuery.inArray(sv[1],vl.split(","))>-1) ov.selected ="selected";
+						if (msl && jQuery.inArray(jQuery.trim(sv[1]), ovm)>-1) {ov.selected ="selected";}
 						elem.appendChild(ov);
 					}
 				} else if (typeof options.value == 'object') {
@@ -172,31 +187,31 @@ function createEl(eltype,options,vl,elm) {
 					for ( var key in oSv) {
 						i++;
 						ov = document.createElement("option");
-						ov.value = key; ov.innerHTML = $.htmlDecode(oSv[key]);
-						if (!msl &&  oSv[key]==vl) ov.selected ="selected";
-						if (msl && jQuery.inArray(oSv[key],vl.split(","))>-1) ov.selected ="selected";
+						ov.value = key; ov.innerHTML = oSv[key];
+						if (!msl &&  oSv[key]==vl) {ov.selected ="selected";}
+						if (msl && jQuery.inArray(jQuery.trim(oSv[key]),ovm)>-1) {ov.selected ="selected";}
 						elem.appendChild(ov);
 					}
-					jQuery(elem).attr({id:options.id,name:options.name,size:Math.min(options.size,i), multiple:msl });
+					jQuery(elem).attr({id:options.id,name:options.name,size:Math.min(options.size,i) });
 				}
 			}
 			break;
 		case "text" :
 			elem = document.createElement("input");
 			elem.type = "text";
-			vl = $.htmlDecode(vl);
+			vl = jQuery.htmlDecode(vl);
 			elem.value = vl;
-			if(!options.size && elm) {
-				jQuery(elem).css("width","98%");
+			if(!options.size) {
+				jQuery(elem).css({width:"98%"});
 			}
 			jQuery(elem).attr(options);
 			break;
 		case "password" :
 			elem = document.createElement("input");
 			elem.type = "password";
-			vl = $.htmlDecode(vl);
+			vl = jQuery.htmlDecode(vl);
 			elem.value = vl;
-			if(!options.size && elm) { jQuery(elem).css("width","99%"); }
+			if(!options.size) { jQuery(elem).css("width","98%"); }
 			jQuery(elem).attr(options);
 			break;
 		case "image" :
@@ -238,7 +253,7 @@ function checkValues(val, valref,g) {
 		if(edtrul.integer === true) {
 			if( !(rqfield === false && isEmpty(val)) ) {
 				if(isNaN(val)) return [false,g.p.colNames[valref]+": "+jQuery.jgrid.edit.msg.integer,""];
-				if ((val < 0) || (val % 1 != 0) || (val.indexOf('.') != -1)) return [false,g.p.colNames[valref]+": "+jQuery.jgrid.edit.msg.integer,""];
+				if ((val % 1 != 0) || (val.indexOf('.') != -1)) return [false,g.p.colNames[valref]+": "+jQuery.jgrid.edit.msg.integer,""];
 			}
 		}
 		if(edtrul.date === true) {
@@ -335,4 +350,7 @@ function isEmpty(val)
 	} else {
 		return false;
 	} 
+}
+function htmlEncode (value){
+    return !value ? value : String(value).replace(/&/g, "&amp;").replace(/>/g, "&gt;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
 }

@@ -27,6 +27,8 @@ $.fn.extend({
 			beforeShowSearch: null,
 			afterShowSearch : null,
 			onInitializeSearch: null,
+			closeAfterSearch : false,
+			closeOnEscape : false,
 			// translation
 			// if you want to change or remove the order change it in sopt
 			// ['bw','eq','ne','lt','le','gt','ge','ew','cn'] 
@@ -39,9 +41,9 @@ $.fn.extend({
 			var gID = $("table:first",$t.grid.bDiv).attr("id");
 			var IDs = { themodal:'srchmod'+gID,modalhead:'srchhead'+gID,modalcontent:'srchcnt'+gID };
 			if ( $("#"+IDs.themodal).html() != null ) {
-				if( $.isFunction('beforeShowSearch') ) { beforeShowSearch($("#srchcnt"+gID)); }
+				if( $.isFunction(p.beforeShowSearch) ) { p.beforeShowSearch($("#srchcnt"+gID)); }
 				viewModal("#"+IDs.themodal,{modal: p.modal});
-				if( $.isFunction('afterShowSearch') ) { afterShowSearch($("#srchcnt"+gID)); }
+				if( $.isFunction(p.afterShowSearch) ) { p.afterShowSearch($("#srchcnt"+gID)); }
 			} else {
 				var cM = $t.p.colModel;
 				var cNames = "<select id='snames' class='search'>";
@@ -84,17 +86,17 @@ $.fn.extend({
 				var bReset  = "<input id='sreset' class='buttonsearch' type='button' value='"+p.Reset+"'/>";
 				var cnt = $("<table width='100%'><tbody><tr style='display:none' id='srcherr'><td colspan='5'></td></tr><tr><td>"+cNames+"</td><td>"+sOpt+"</td><td>"+sField+"</td><td>"+bSearch+"</td><td>"+bReset+"</td></tr></tbody></table>");
 				createModal(IDs,cnt,p,$t.grid.hDiv,$t.grid.hDiv);
-				if ( $.isFunction('onInitializeSearch') ) { onInitializeSearch( $("#srchcnt"+gID) ); };
-				if ( $.isFunction('beforeShowSearch') ) { beforeShowSearch($("#srchcnt"+gID)); };
+				if ( $.isFunction(p.onInitializeSearch) ) { p.onInitializeSearch( $("#srchcnt"+gID) ); };
+				if ( $.isFunction(p.beforeShowSearch) ) { p.beforeShowSearch($("#srchcnt"+gID)); };
 				viewModal("#"+IDs.themodal,{modal:p.modal});
-				if($.isFunction('afterShowSearch')) { afterShowSearch($("#srchcnt"+gID)); }
+				if($.isFunction(p.afterShowSearch)) { p.afterShowSearch($("#srchcnt"+gID)); }
 				if(p.drag) { DnRModal("#"+IDs.themodal,"#"+IDs.modalhead+" td.modaltext"); }
 				$("#sbut","#"+IDs.themodal).click(function(){
 					if( $("#sval","#"+IDs.themodal).val() !="" ) {
 						var es=[true,"",""];
 						$("#srcherr >td","#srchcnt"+gID).html("").hide();
-						$t.p.searchdata[p.sField] = $("option[@selected]","#snames").val();
-						$t.p.searchdata[p.sOper] = $("option[@selected]","#sopt").val();
+						$t.p.searchdata[p.sField] = $("option[selected]","#snames").val();
+						$t.p.searchdata[p.sOper] = $("option[selected]","#sopt").val();
 						$t.p.searchdata[p.sValue] = $("#sval","#"+IDs.modalcontent).val();
 						if(p.checkInput) {
 							for(var i=0; i< cM.length;i++) {
@@ -111,6 +113,9 @@ $.fn.extend({
 							if(p.dirty) { $(".no-dirty-cell",$t.p.pager).addClass("dirty-cell"); }
 							$t.p.page= 1;
 							$($t).trigger("reloadGrid");
+							if(p.closeAfterSearch === true) {
+								hideModal("#"+IDs.themodal);
+							}
 						} else {
 							$("#srcherr >td","#srchcnt"+gID).html(es[1]).show();
 						}
@@ -158,6 +163,7 @@ $.fn.extend({
 			afterclickPgButtons: null,
 			editData : {},
 			recreateForm : false,
+			closeOnEscape : false,
 			addedrow : "first"
 		}, $.jgrid.edit, p || {});
 		rp_ge = p;
@@ -166,20 +172,20 @@ $.fn.extend({
 			if (!$t.grid || !rowid) { return; }
 			if(!p.imgpath) { p.imgpath= $t.p.imgpath; }
 			// I hate to rewrite code, but ...
-			var gID = $("table:first",$t.grid.bDiv).attr("id");
-			var IDs = {themodal:'editmod'+gID,modalhead:'edithd'+gID,modalcontent:'editcnt'+gID};
-			var onBeforeShow = $.isFunction(rp_ge.beforeShowForm) ? rp_ge.beforeShowForm : false;
-			var onAfterShow = $.isFunction(rp_ge.afterShowForm) ? rp_ge.afterShowForm : false;
-			var onBeforeInit = $.isFunction(rp_ge.beforeInitData) ? rp_ge.beforeInitData : false;
-			var onInitializeForm = $.isFunction(rp_ge.onInitializeForm) ? rp_ge.onInitializeForm : false;
+			var gID = $("table:first",$t.grid.bDiv).attr("id"),
+			IDs = {themodal:'editmod'+gID,modalhead:'edithd'+gID,modalcontent:'editcnt'+gID},
+			onBeforeShow = $.isFunction(rp_ge.beforeShowForm) ? rp_ge.beforeShowForm : false,
+			onAfterShow = $.isFunction(rp_ge.afterShowForm) ? rp_ge.afterShowForm : false,
+			onBeforeInit = $.isFunction(rp_ge.beforeInitData) ? rp_ge.beforeInitData : false,
+			onInitializeForm = $.isFunction(rp_ge.onInitializeForm) ? rp_ge.onInitializeForm : false,
+			maxCols = 1, copydata,
+			frmgr = "FrmGrid_"+gID , frmtb = "TblGrid_"+gID;
 			if (rowid=="new") {
 				rowid = "_empty";
 				p.caption=p.addCaption;
 			} else {
 				p.caption=p.editCaption;
 			};
-			var frmgr = "FrmGrid_"+gID;
-			var frmtb = "TblGrid_"+gID;
 			if(p.recreateForm===true && $("#"+IDs.themodal).html() != null) {
 				$("#"+IDs.themodal).remove();
 			}
@@ -190,24 +196,50 @@ $.fn.extend({
 				fillData(rowid,$t);
 				if(rowid=="_empty") { $("#pData, #nData","#"+frmtb).hide(); } else { $("#pData, #nData","#"+frmtb).show(); }
 				if(onBeforeShow) { onBeforeShow($("#"+frmgr)); }
+				if(p.processing === true)  { // in case of error from server
+					p.processing=false;
+					$("#sData", "#"+frmtb).attr("disabled",false);
+					$("div.loading","#"+IDs.themodal).hide();
+				}
 				viewModal("#"+IDs.themodal,{modal:p.modal});
 				if(onAfterShow) { onAfterShow($("#"+frmgr)); }
 			} else {
-				var frm = $("<form name='FormPost' id='"+frmgr+"' class='FormGrid'></form>");
-				var tbl =$("<table id='"+frmtb+"' class='EditTable' cellspacing='0' cellpading='0' border='0'><tbody></tbody></table>");
+				$($t.p.colModel).each( function(i) {
+					maxCols = Math.max(maxCols, this.formoptions ? this.formoptions.colpos || 0 : 0 );
+				});				
+				var flr, frm = $("<form name='FormPost' id='"+frmgr+"' class='FormGrid'></form>"),
+				tbl =$("<table id='"+frmtb+"' class='EditTable' cellspacing='0' cellpading='0' border='0'><tbody></tbody></table>");
 				$(frm).append(tbl);
-				$(tbl).append("<tr id='FormError' style='display:none'><td colspan='2'>"+"&nbsp;"+"</td></tr>");
+				flr = $("<tr id='FormError' style='display:none'><td colspan='"+(maxCols*2)+"'></td></tr>");
+				flr[0].rp = 0;
+				$(tbl).append(flr);
 				// set the id.
 				// use carefull only to change here colproperties.
 				if(onBeforeInit) { onBeforeInit($("#"+frmgr)); }
-				var valref = createData(rowid,$t,tbl);
+				var valref = createData(rowid, $t, tbl, maxCols),
 				// buttons at footer
-				var imp = $t.p.imgpath;
-				var bP  ="<img id='pData' src='"+imp+$t.p.previmg+"'/>";
-				var bN  ="<img id='nData' src='"+imp+$t.p.nextimg+"'/>";
-				var bS  ="<input id='sData' type='button' class='EditButton' value='"+p.bSubmit+"'/>";
-				var bC  ="<input id='cData' type='button'  class='EditButton' value='"+p.bCancel+"'/>";
-				$(tbl).append("<tr id='Act_Buttons'><td class='navButton'>"+bP+"&nbsp;"+bN+"</td><td class='EditButton'>"+bS+"&nbsp;"+bC+"</td></tr>");
+				imp = $t.p.imgpath,
+				bP  ="<img id='pData' src='"+imp+$t.p.previmg+"'/>",
+				bN  ="<img id='nData' src='"+imp+$t.p.nextimg+"'/>",
+				bS  ="<input id='sData' type='button' class='EditButton' value='"+p.bSubmit+"'/>",
+				bC  ="<input id='cData' type='button'  class='EditButton' value='"+p.bCancel+"'/>";
+				flr = $("<tr id='Act_Buttons'><td class='navButton'>"+bP+"&nbsp;"+bN+"</td><td colspan='"+(maxCols*2-1)+"'class='EditButton'>"+bS+"&nbsp;"+bC+"</td></tr>");
+				flr[0].rp = valref.length + 100;
+				$(tbl).append(flr);
+				if(maxCols >  1) {
+					var sd=[];
+					$.each($(tbl)[0].rows,function(i,r){
+						sd[i] = r;
+					});
+					sd.sort(function(a,b){
+						if(a.rp > b.rp) {return 1;}
+						if(a.rp < b.rp) {return -1;}
+						return 0;
+					});
+					$.each(sd, function(index, row) {
+						$('tbody',tbl).append(row);
+					});
+				}
 				// beforeinitdata after creation of the form
 				createModal(IDs,frm,p,$t.grid.hDiv,$t.grid.hDiv);
 				// here initform - only once
@@ -255,8 +287,12 @@ $.fn.extend({
 							case "text":
 							case "textarea":
 								postdata[this.name] = $(this).val();
-								ret = checkValues($(this).val(),valref[i],$t);
-								if(ret[0] === false) { suc=false; }
+								ret = checkValues(postdata[this.name],valref[i],$t);
+								if(ret[0] === false) {
+									suc=false;
+								} else {
+									postdata[this.name] = !$t.p.autoencode ? postdata[this.name] : htmlEncode(postdata[this.name]);
+								}
 							break;
 						}
 						j++;
@@ -277,7 +313,7 @@ $.fn.extend({
 					} else {
 						if(!p.processing) {
 							p.processing = true;
-							$("div.loading","#"+IDs.themodal).fadeIn("fast");
+							$("div.loading","#"+IDs.themodal).show();
 							$(this).attr("disabled",true);
 							// we add to pos data array the action - the name is oper
 							postdata.oper = postdata.id == "_empty" ? "add" : "edit";
@@ -335,8 +371,9 @@ $.fn.extend({
 														break;
 													}
 												});
+												fillData("_empty",$t);
 											} else {
-												if(rp_ge.reloadAfterSubmit) { $($t).trigger("reloadGrid"); }
+												if(rp_ge.reloadAfterSubmit) { $($t).trigger("reloadGrid");}
 												else { $($t).addRowData(ret[2],postdata,p.addedrow); }
 											}
 										} else {
@@ -354,21 +391,31 @@ $.fn.extend({
 											if(rp_ge.closeAfterEdit) { hideModal("#"+IDs.themodal); }
 										}
 										if($.isFunction(rp_ge.afterComplete)) {
-											setTimeout(function(){rp_ge.afterComplete(data,postdata,$("#"+frmgr));},500);
+											copydata = data;
+											setTimeout(function(){rp_ge.afterComplete(copydata,postdata,$("#"+frmgr));copydata=null},500);
 										}
 									}
 									p.processing=false;
 									$("#sData", "#"+frmtb).attr("disabled",false);
-									$("div.loading","#"+IDs.themodal).fadeOut("fast");
+									$("div.loading","#"+IDs.themodal).hide();
+								},
+								error:function(xhr,st,err){
+									$("#FormError>td","#"+frmtb).html(st+ " : "+err);
+									$("#FormError","#"+frmtb).show();
+									p.processing=false;
+									$("#sData", "#"+frmtb).attr("disabled",false);
+									$("div.loading","#"+IDs.themodal).hide();
 								}
 							});
 						}
 					}
 					e.stopPropagation();
+					return false;
 				});
 				$("#cData", "#"+frmtb).click(function(e){
 					hideModal("#"+IDs.themodal);
 					e.stopPropagation();
+					return false;
 				});
 				$("#nData", "#"+frmtb).click(function(e){
 					$("#FormError","#"+frmtb).hide();
@@ -417,53 +464,70 @@ $.fn.extend({
 				var pos = $.inArray(selrow,rowsInGrid);
 				return [pos,rowsInGrid];
 			};
-			function createData(rowid,obj,tb){
-				var nm, hc,trdata, tdl, tde, cnt=0,tmp, dc,elc, retpos=[];
-				$('#'+rowid+' td',obj.grid.bDiv).each( function(i) {
-					nm = obj.p.colModel[i].name;
+			function createData(rowid,obj,tb,maxcols){
+				var nm, hc,trdata, tdl, tde, cnt=0,tmp, dc,elc, retpos=[], ind=false,
+				tdtmpl = "<td class='CaptionTD'>&nbsp;</td><td class='DataTD'>&nbsp;</td>", tmpl=""; //*2
+				for (var i =1;i<=maxcols;i++) {
+					tmpl += tdtmpl;
+				}
+				ind = $(obj).getInd(obj.rows,rowid);
+				$(obj.p.colModel).each( function(i) {
+					nm = this.name;
 					// hidden fields are included in the form
-					if(obj.p.colModel[i].editrules && obj.p.colModel[i].editrules.edithidden == true) {
+					if(this.editrules && this.editrules.edithidden == true) {
 						hc = false;
 					} else {
-						hc = obj.p.colModel[i].hidden === true ? true : false;
+						hc = this.hidden === true ? true : false;
 					}
 					dc = hc ? "style='display:none'" : "";
-					if ( nm !== 'cb' && nm !== 'subgrid' && obj.p.colModel[i].editable===true) {
-						if(nm == obj.p.ExpandColumn && obj.p.treeGrid === true) {
-							tmp = $(this).text();
+					if ( nm !== 'cb' && nm !== 'subgrid' && this.editable===true) {
+						if(ind === false) {
+							tmp = "";
 						} else {
-							try {
-								tmp =  $.unformat(this,{colModel:obj.p.colModel[i]},i);
-							} catch (_) {
-								tmp = $.htmlDecode($(this).html());
+							if(nm == obj.p.ExpandColumn && obj.p.treeGrid === true) {
+								tmp = $("td:eq("+i+")",obj.rows[ind]).text();
+							} else {
+								try {
+									tmp =  $.unformat($("td:eq("+i+")",obj.rows[ind]),{colModel:this},i);
+								} catch (_) {
+									tmp = $("td:eq("+i+")",obj.rows[ind]).html();
+								}
 							}
 						}
-						var opt = $.extend(obj.p.colModel[i].editoptions || {} ,{id:nm,name:nm});
-						if(!obj.p.colModel[i].edittype) obj.p.colModel[i].edittype = "text";
-						elc = createEl(obj.p.colModel[i].edittype,opt,tmp);
+						var opt = $.extend({}, this.editoptions || {} ,{id:nm,name:nm}),
+						frmopt = $.extend({}, {elmprefix:'',elmsuffix:''}, this.formoptions || {}),
+						rp = parseInt(frmopt.rowpos) || cnt+1,
+						cp = parseInt((parseInt(frmopt.colpos) || 1)*2);
+						if(rowid == "_empty" && opt.defaultValue ) {
+							tmp = $.isFunction(opt.defaultValue) ? opt.defaultValue() : opt.defaultValue; 
+						}
+						if(!this.edittype) this.edittype = "text";
+						elc = createEl(this.edittype,opt,tmp);
 						$(elc).addClass("FormElement");
-						trdata = $("<tr "+dc+"></tr>").addClass("FormData").attr("id","tr_"+nm);
-						tdl = $("<td></td>").addClass("CaptionTD");
-						tde = $("<td></td>").addClass("DataTD");
-						$(tdl).html(obj.p.colNames[i]+": ");
-						$(tde).append(elc);
-						trdata.append(tdl);
-						trdata.append(tde);
-						if(tb) { $(tb).append(trdata); }
-						else { $(trdata).insertBefore("#Act_Buttons"); }
+						// try to find the element
+						trdata = $(tbl).find("tr[rowpos="+rp+"]");
+						if ( trdata.length==0 ) {
+							trdata = $("<tr "+dc+" rowpos='"+rp+"'></tr>").addClass("FormData").attr("id","tr_"+nm);
+							$(trdata).append(tmpl);
+							$(tb).append(trdata);
+							trdata[0].rp = rp;
+						}
+						$("td:eq("+(cp-2)+")",trdata[0]).html( typeof frmopt.label === 'undefined' ? obj.p.colNames[i]: frmopt.label);
+						$("td:eq("+(cp-1)+")",trdata[0]).append(frmopt.elmprefix).append(elc).append(frmopt.elmsuffix);
+						//$(tb).append(trdata);
 						retpos[cnt] = i;
 						cnt++;
 					};
 				});
 				if( cnt > 0) {
-					var idrow = $("<tr class='FormData' style='display:none'><td class='CaptionTD'>"+"&nbsp;"+"</td><td class='DataTD'><input class='FormElement' id='id_g' type='text' name='id' value='"+rowid+"'/></td></tr>");
-					if(tb) { $(tb).append(idrow); }
-					else { $(idrow).insertBefore("#Act_Buttons"); }
+					var idrow = $("<tr class='FormData' style='display:none'><td class='CaptionTD'></td><td colspan='"+ (maxcols*2-1)+"' class='DataTD'><input class='FormElement' id='id_g' type='text' name='id' value='"+rowid+"'/></td></tr>");
+					idrow[0].rp = cnt+99;
+					$(tb).append(idrow);
 				}
 				return retpos;
 			};
 			function fillData(rowid,obj){
-				var nm, hc,cnt=0,tmp;
+				var nm, hc,cnt=0,tmp, opt;
 				$('#'+rowid+' td',obj.grid.bDiv).each( function(i) {
 					nm = obj.p.colModel[i].name;
 					// hidden fields are included in the form
@@ -479,24 +543,28 @@ $.fn.extend({
 							try {
 								tmp =  $.unformat(this,{colModel:obj.p.colModel[i]},i);
 							} catch (_) {
-								tmp = $.htmlDecode($(this).html());
+								tmp = $(this).html();
 							}
+						}
+						nm= nm.replace('.',"\\.");
+						opt = $.extend({},obj.p.colModel[i].editoptions || {});
+						if(rowid == "_empty" && opt.defaultValue ) {
+							tmp = $.isFunction(opt.defaultValue) ? opt.defaultValue() : opt.defaultValue; 
 						}
 						switch (obj.p.colModel[i].edittype) {
 							case "password":
 							case "text":
-								tmp = $.htmlDecode(tmp);
 								$("#"+nm,"#"+frmtb).val(tmp);
 								break;
 							case "textarea":
-								if(tmp == "&nbsp;" || tmp == "&#160;") {tmp='';}
+								if(tmp == "&nbsp;" || tmp == "&#160;" || (tmp.length==1 && tmp.charCodeAt(0)==160) ) {tmp='';}
 								$("#"+nm,"#"+frmtb).val(tmp);
 								break;
 							case "select":
 								$("#"+nm+" option","#"+frmtb).each(function(j){
-									if (!obj.p.colModel[i].editoptions.multiple && tmp == $(this).text() ){
+									if (!opt.multiple && tmp == $(this).text() ){
 										this.selected= true;
-									} else if (obj.p.colModel[i].editoptions.multiple){
+									} else if (opt.multiple){
 										if(  $.inArray($(this).text(), tmp.split(",") ) > -1  ){
 											this.selected = true;
 										}else{
@@ -527,6 +595,231 @@ $.fn.extend({
 			};
 		});
 	},
+	viewGridRow : function(rowid, p){
+		p = $.extend({
+			top : 0,
+			left: 0,
+			width: 0,
+			height: 0,
+			modal: false,
+			drag: true, 
+			closeicon: 'ico-close.gif',
+			imgpath: '',
+			closeOnEscape : false,
+			labelswidth: '30%'
+		}, $.jgrid.view, p || {});
+		return this.each(function(){
+			var $t = this;
+			if (!$t.grid || !rowid) { return; }
+			if(!p.imgpath) { p.imgpath= $t.p.imgpath; }
+			// I hate to rewrite code, but ...
+			var gID = $("table:first",$t.grid.bDiv).attr("id"),
+			IDs = {themodal:'viewmod'+gID,modalhead:'viewhd'+gID,modalcontent:'viewcnt'+gID},
+			maxCols = 1,
+			frmgr = "ViewGrid_"+gID , frmtb = "ViewTbl_"+gID;
+			if ( $("#"+IDs.themodal).html() != null ) {
+				$(".modaltext","#"+IDs.modalhead).html(p.caption);
+				$("#FormError","#"+frmtb).hide();
+				fillData(rowid,$t);
+				viewModal("#"+IDs.themodal,{modal:p.modal});
+				focusaref();
+			} else {
+				$($t.p.colModel).each( function(i) {
+					maxCols = Math.max(maxCols, this.formoptions ? this.formoptions.colpos || 0 : 0 );
+				});				
+				var flr, frm = $("<form name='FormPost' id='"+frmgr+"' class='FormGrid'></form>"),
+				tbl =$("<table id='"+frmtb+"' class='EditTable' cellspacing='0' cellpading='2' border='0' style='table-layout:fixed'><tbody></tbody></table>");
+				$(frm).append(tbl);
+				// set the id.
+				var valref = createData(rowid, $t, tbl, maxCols),
+				// buttons at footer
+				imp = $t.p.imgpath,
+				bP  ="<img id='pData' src='"+imp+$t.p.previmg+"'/>",
+				bN  ="<img id='nData' src='"+imp+$t.p.nextimg+"'/>",
+				bC  ="<input id='cData' type='button'  class='EditButton' value='"+p.bClose+"'/>";
+				flr = $("<tr id='Act_Buttons'><td class='navButton'>"+bP+"&nbsp;"+bN+"</td><td colspan='"+(maxCols*2-1)+"'class='EditButton'>"+bC+"</td></tr>");
+				flr[0].rp = valref.length + 100;
+				$(tbl).append(flr);
+				if(maxCols >  1) {
+					var sd=[];
+					$.each($(tbl)[0].rows,function(i,r){
+						sd[i] = r;
+					});
+					sd.sort(function(a,b){
+						if(a.rp > b.rp) {return 1;}
+						if(a.rp < b.rp) {return -1;}
+						return 0;
+					});
+					$.each(sd, function(index, row) {
+						$('tbody',tbl).append(row);
+					});
+				}
+				createModal(IDs,frm,p,$t.grid.hDiv,$t.grid.hDiv);
+				if( p.drag ) { DnRModal("#"+IDs.themodal,"#"+IDs.modalhead+" td.modaltext"); }
+				viewModal("#"+IDs.themodal,{modal:p.modal});
+				focusaref();
+				$("#cData", "#"+frmtb).click(function(e){
+					hideModal("#"+IDs.themodal);
+					e.stopPropagation();
+					return false;
+				});
+				$("#nData", "#"+frmtb).click(function(e){
+					$("#FormError","#"+frmtb).hide();
+					var npos = getCurrPos();
+					npos[0] = parseInt(npos[0]);
+					if(npos[0] != -1 && npos[1][npos[0]+1]) {
+						if($.isFunction(p.onclickPgButtons)) {
+							p.onclickPgButtons('next',$("#"+frmgr),npos[1][npos[0]]);
+						}
+						fillData(npos[1][npos[0]+1],$t);
+						$($t).setSelection(npos[1][npos[0]+1]);
+						if($.isFunction(p.afterclickPgButtons)) {
+							p.afterclickPgButtons('next',$("#"+frmgr),npos[1][npos[0]+1]);
+						}
+						updateNav(npos[0]+1,npos[1].length-1);
+					};
+					focusaref();
+					return false;
+				});
+				$("#pData", "#"+frmtb).click(function(e){
+					$("#FormError","#"+frmtb).hide();
+					var ppos = getCurrPos();
+					if(ppos[0] != -1 && ppos[1][ppos[0]-1]) {
+						if($.isFunction(p.onclickPgButtons)) {
+							p.onclickPgButtons('prev',$("#"+frmgr),ppos[1][ppos[0]]);
+						}
+						fillData(ppos[1][ppos[0]-1],$t);
+						$($t).setSelection(ppos[1][ppos[0]-1]);
+						if($.isFunction(p.afterclickPgButtons)) {
+							p.afterclickPgButtons('prev',$("#"+frmgr),ppos[1][ppos[0]-1]);
+						}
+						updateNav(ppos[0]-1,ppos[1].length-1);
+					};
+					focusaref();
+					return false;
+				});
+			};
+			function focusaref(){ //Sfari 3 issues
+				if(p.closeOnEscape===true) {
+					setTimeout(function(){$(".jqmClose","#"+IDs.modalhead).focus()},0);
+				}
+			}
+			var posInit =getCurrPos();
+			updateNav(posInit[0],posInit[1].length-1);
+			function updateNav(cr,totr,rid){                
+				var imp = $t.p.imgpath;
+				if (cr==0) { $("#pData","#"+frmtb).attr("src",imp+"off-"+$t.p.previmg); } else { $("#pData","#"+frmtb).attr("src",imp+$t.p.previmg); }
+				if (cr==totr) { $("#nData","#"+frmtb).attr("src",imp+"off-"+$t.p.nextimg); } else { $("#nData","#"+frmtb).attr("src",imp+$t.p.nextimg); }
+			};
+			function getCurrPos() {
+				var rowsInGrid = $($t).getDataIDs();
+				var selrow = $("#id_g","#"+frmtb).val();
+				var pos = $.inArray(selrow,rowsInGrid);
+				return [pos,rowsInGrid];
+			};
+			function createData(rowid,obj,tb,maxcols){
+				var nm, hc,trdata, tdl, tde, cnt=0,tmp, dc,elc, retpos=[], ind=false,
+				tdtmpl = "<td class='CaptionTD' width='"+p.labelswidth+"'>&nbsp;</td><td class='DataTD'>&nbsp;</td>", tmpl="",
+				tdtmpl2 = "<td class='CaptionTD'>&nbsp;</td><td class='DataTD'>&nbsp;</td>",
+				fmtnum = ['integer','number','currency'],max1 =0, max2=0 ,maxw,setme;
+				for (var i =1;i<=maxcols;i++) {
+					tmpl += i == 1 ? tdtmpl : tdtmpl2;
+				}
+				// find max number align rigth with property formatter
+				$(obj.p.colModel).each( function(i) {
+					if(this.editrules && this.editrules.edithidden === true) {
+						hc = false;
+					} else {
+						hc = this.hidden === true ? true : false;
+					}
+					if(!hc && this.align==='right') {
+						if(this.formatter && $.inArray(this.formatter,fmtnum) !== -1 ) {
+							max1 = Math.max(max1,parseInt(this.width,10));
+						} else {
+							max2 = Math.max(max2,parseInt(this.width,10));
+						}
+					}
+				});
+				maxw  = max1 !==0 ? max1 : max2 !==0 ? max2 : 0;
+				ind = $(obj).getInd(obj.rows,rowid);
+				$(obj.p.colModel).each( function(i) {
+					nm = this.name;
+					setme = false;
+					// hidden fields are included in the form
+					if(this.editrules && this.editrules.edithidden === true) {
+						hc = false;
+					} else {
+						hc = this.hidden === true ? true : false;
+					}
+					dc = hc ? "style='display:none'" : "";
+					if ( nm !== 'cb' && nm !== 'subgrid' && this.editable===true) {
+						if(ind === false) {
+							tmp = "";
+						} else {
+							if(nm == obj.p.ExpandColumn && obj.p.treeGrid === true) {
+								tmp = $("td:eq("+i+")",obj.rows[ind]).text();
+							} else {
+								tmp = $("td:eq("+i+")",obj.rows[ind]).html();
+							}
+						}
+						setme = this.align === 'right' && maxw !==0 ? true : false;
+						var opt = $.extend({}, this.editoptions || {} ,{id:nm,name:nm}),
+						frmopt = $.extend({}, {elmprefix:'',elmsuffix:''}, this.formoptions || {}),
+						rp = parseInt(frmopt.rowpos) || cnt+1,
+						cp = parseInt((parseInt(frmopt.colpos) || 1)*2);
+						if(!this.edittype) this.edittype = "text";
+						trdata = $(tbl).find("tr[rowpos="+rp+"]");
+						if ( trdata.length==0 ) {
+							trdata = $("<tr "+dc+" rowpos='"+rp+"'></tr>").addClass("FormData").attr("id","tr_"+nm);
+							$(trdata).append(tmpl);
+							$(tb).append(trdata);
+							trdata[0].rp = rp;
+						}
+						$("td:eq("+(cp-2)+")",trdata[0]).html('<b>'+ (typeof frmopt.label === 'undefined' ? obj.p.colNames[i]: frmopt.label)+'</b>');
+						$("td:eq("+(cp-1)+")",trdata[0]).append("<span style='position:absolute;float:left;'>"+tmp+"</span>").attr("id",nm);
+						if(setme){
+							$("td:eq("+(cp-1)+") span",trdata[0]).css({'text-align':'right',width:maxw+"px"});
+						}
+						retpos[cnt] = i;
+						cnt++;
+					};
+				});
+				if( cnt > 0) {
+					var idrow = $("<tr class='FormData' style='display:none'><td class='CaptionTD'></td><td colspan='"+ (maxcols*2-1)+"' class='DataTD'><input class='FormElement' id='id_g' type='text' name='id' value='"+rowid+"'/></td></tr>");
+					idrow[0].rp = cnt+99;
+					$(tb).append(idrow);
+				}
+				return retpos;
+			};
+			function fillData(rowid,obj){
+				var nm, hc,cnt=0,tmp, opt;
+				$('#'+rowid+' td',obj.grid.bDiv).each( function(i) {
+					nm = obj.p.colModel[i].name;
+					// hidden fields are included in the form
+					if(obj.p.colModel[i].editrules && obj.p.colModel[i].editrules.edithidden === true) {
+						hc = false;
+					} else {
+						hc = obj.p.colModel[i].hidden === true ? true : false;
+					}
+					if ( nm !== 'cb' && nm !== 'subgrid' && obj.p.colModel[i].editable===true) {
+						if(nm == obj.p.ExpandColumn && obj.p.treeGrid === true) {
+							tmp = $(this).text();
+						} else {
+							tmp = $(this).html();
+						}
+						nm= nm.replace('.',"\\.");
+						opt = $.extend({},obj.p.colModel[i].editoptions || {});
+						$("#"+nm+" span","#"+frmtb).html(tmp);
+						if (hc) { $("#"+nm,"#"+frmtb).parents("tr:first").hide(); }
+						cnt++;
+					}
+				});
+				if(cnt>0) { $("#id_g","#"+frmtb).val(rowid); }
+				else { $("#id_g","#"+frmtb).val(""); }
+				return cnt;
+			};
+		});
+	},
 	delGridRow : function(rowids,p) {
 		p = $.extend({
 			top : 0,
@@ -546,6 +839,7 @@ $.fn.extend({
 			onclickSubmit: null,
 			afterSubmit: null,
 			onclickSubmit: null,
+			closeOnEscape : false,
 			delData: {}
 		}, $.jgrid.del, p ||{});
 		return this.each(function(){
@@ -553,15 +847,21 @@ $.fn.extend({
 			if (!$t.grid ) { return; }
 			if(!rowids) { return; }
 			if(!p.imgpath) { p.imgpath= $t.p.imgpath; }
-			var onBeforeShow = typeof p.beforeShowForm === 'function' ? true: false;
-			var onAfterShow = typeof p.afterShowForm === 'function' ? true: false;
+			var onBeforeShow = typeof p.beforeShowForm === 'function' ? true: false,
+			onAfterShow = typeof p.afterShowForm === 'function' ? true: false,
+			gID = $("table:first",$t.grid.bDiv).attr("id"),
+			IDs = {themodal:'delmod'+gID,modalhead:'delhd'+gID,modalcontent:'delcnt'+gID},
+			dtbl = "DelTbl_"+gID,
+			copydata;
 			if (isArray(rowids)) { rowids = rowids.join(); }
-			var gID = $("table:first",$t.grid.bDiv).attr("id");
-			var IDs = {themodal:'delmod'+gID,modalhead:'delhd'+gID,modalcontent:'delcnt'+gID};
-			var dtbl = "DelTbl_"+gID;
 			if ( $("#"+IDs.themodal).html() != null ) {
 				$("#DelData>td","#"+dtbl).text(rowids);
 				$("#DelError","#"+dtbl).hide();
+				if(p.processing===true) { // error case
+					p.processing=false;
+					$("#dData", "#"+dtbl).attr("disabled",false);
+					$("div.loading","#"+IDs.themodal).hide();
+				}
 				if(onBeforeShow) { p.beforeShowForm($("#"+dtbl)); }
 				viewModal("#"+IDs.themodal,{modal:p.modal});
 				if(onAfterShow) { p.afterShowForm($("#"+dtbl)); }
@@ -590,7 +890,7 @@ $.fn.extend({
 					} else {
 						if(!p.processing) {
 							p.processing = true;
-							$("div.loading","#"+IDs.themodal).fadeIn("fast");
+							$("div.loading","#"+IDs.themodal).show();
 							$(this).attr("disabled",true);
 							var postd = $.extend({oper:"del", id:postdata},p.delData);
 							$.ajax({
@@ -631,13 +931,21 @@ $.fn.extend({
 											$t.p.selarrrow = [];
 										}
 										if($.isFunction(p.afterComplete)) {
-											setTimeout(function(){p.afterComplete(data,postdata);},500);
+											copydata = data;
+											setTimeout(function(){p.afterComplete(copydata,postdata);copydata=null;},500);
 										}
 									}
 									p.processing=false;
 									$("#dData", "#"+dtbl).attr("disabled",false);
-									$("div.loading","#"+IDs.themodal).fadeOut("fast");
+									$("div.loading","#"+IDs.themodal).hide();
 									if(ret[0]) { hideModal("#"+IDs.themodal); }
+								},
+								error:function(xhr,st,err){
+									$("#DelError>td","#"+dtbl).html(st+ " : "+err);
+									$("#DelError","#"+dtbl).show();
+									p.processing=false;
+									$("#dData", "#"+dtbl).attr("disabled",false);
+									$("div.loading","#"+IDs.themodal).hide();
 								}
 							});
 						}
@@ -654,7 +962,7 @@ $.fn.extend({
 			}
 		});
 	},
-	navGrid : function (elem, o, pEdit,pAdd,pDel,pSearch) {
+	navGrid : function (elem, o, pEdit,pAdd,pDel,pSearch, pView) {
 		o = $.extend({
 			edit: true,
 			editicon: "row_edit.gif",
@@ -673,7 +981,10 @@ $.fn.extend({
 			refreshstate: 'firstpage',
 
 			position : "left",
-			closeicon: "ico-close.gif"
+			closeicon: "ico-close.gif",
+			closeOnEscape : true,
+			view: true,
+			viewicon : "row_view.gif"
 		}, $.jgrid.nav, o ||{});
 		return this.each(function() {       
 			var alertIDs = {themodal:'alertmod',modalhead:'alerthd',modalcontent:'alertcnt'};
@@ -692,7 +1003,7 @@ $.fn.extend({
 					vwidth=1024;
 					vheight=768;
 				}
-				createModal(alertIDs,"<div>"+o.alerttext+"</div>",{imgpath:$t.p.imgpath,closeicon:o.closeicon,caption:o.alertcap,top:vheight/2-25,left:vwidth/2-100,width:200,height:50},$t.grid.hDiv,$t.grid.hDiv,true);
+				createModal(alertIDs,"<div>"+o.alerttext+"</div><span tabindex='0'><span tabindex='-1' id='jqg_alrt'><span></span>",{imgpath:$t.p.imgpath,closeicon:o.closeicon,caption:o.alertcap,top:vheight/2-25,left:vwidth/2-100,width:200,height:50,closeOnEscape:o.closeOnEscape},$t.grid.hDiv,$t.grid.hDiv,true);
 				DnRModal("#"+alertIDs.themodal,"#"+alertIDs.modalhead);
 			}
 			var navTbl = $("<table cellspacing='0' cellpadding='0' border='0' class='navtable'><tbody></tbody></table>").height(20);
@@ -746,7 +1057,37 @@ $.fn.extend({
 							$($t).editGridRow(sr,pEdit || {});
 						}
 					} else {
-						viewModal("#"+alertIDs.themodal);
+						viewModal("#"+alertIDs.themodal,{toTop:false});
+						$("#jqg_alrt").focus();
+					}
+					return false;
+				})
+				.hover( function () {
+					$(this).addClass("nav-hover");
+					},
+					function () {
+						$(this).removeClass("nav-hover");
+					}
+				);
+				trd.appendChild(tbd);
+				tbd = null;
+			}
+			if (o.view) {
+				tbd = document.createElement("td");
+				$(tbd).append("&nbsp;").css({border:"none",padding:"0px"});
+				trd.appendChild(tbd);
+				tbd = document.createElement("td");
+				tbd.title = o.viewtitle || "";
+				$(tbd).append("<table cellspacing='0' cellpadding='0' border='0' class='tbutton'><tr><td><img src='"+imp+o.viewicon+"'/></td><td valign='center'>"+o.viewtext+"&nbsp;</td></tr></table>")
+				.css("cursor","pointer")
+				.addClass("nav-button")
+				.click(function(){
+					var sr = $($t).getGridParam('selrow');
+					if (sr) {
+						$($t).viewGridRow(sr,pView || {});
+					} else {
+						viewModal("#"+alertIDs.themodal,{toTop:false});
+						$("#jqg_alrt").focus();
 					}
 					return false;
 				})
@@ -778,7 +1119,7 @@ $.fn.extend({
 						dr = $($t).getGridParam('selrow');
 					}
 					if (dr) { $($t).delGridRow(dr,pDel || {}); }
-					else  { viewModal("#"+alertIDs.themodal); }
+					else  {	viewModal("#"+alertIDs.themodal,{toTop:false}); $("#jqg_alrt").focus(); }
 					return false;
 				})
 				.hover(

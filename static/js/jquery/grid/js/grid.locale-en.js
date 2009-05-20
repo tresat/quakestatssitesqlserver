@@ -37,6 +37,10 @@ $.jgrid.edit = {
 		date: "Please, enter valid date value"
     }
 };
+$.jgrid.view = {
+    caption: "View Record",
+    bClose: "Close"
+}
 $.jgrid.del = {
     caption: "Delete",
     msg: "Delete selected record(s)?",
@@ -56,7 +60,9 @@ $.jgrid.nav = {
     refreshtext: "",
     refreshtitle: "Reload Grid",
     alertcap: "Warning",
-    alerttext: "Please, select row"
+    alerttext: "Please, select row",
+	viewtext: " ",
+	viewtitle: "View selected row"
 };
 // setcolumns module
 $.jgrid.col ={
@@ -102,8 +108,10 @@ $.jgrid.formatter = {
         },
         reformatAfterEdit : false
 	},
-	baseLinkUrl: '', // showlink
-	showAction: 'show' // showlink
+	baseLinkUrl: '',
+	showAction: 'show',
+	addParam : '',
+	checkbox : {disabled:true}
 };
 // US
 // GB

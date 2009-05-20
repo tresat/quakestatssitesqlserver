@@ -13,12 +13,13 @@
  * 
 **/
 
-(function($) {
+;(function($) {
 	$.fmatter = {};
 	//opts can be id:row id for the row, rowdata:the data for the row, colmodel:the column model for this column
 	//example {id:1234,}
 	$.fn.fmatter = function(formatType, cellval, opts, act) {
-		//debug(this);debug(cellval);
+		//debug(this);
+		//debug(cellval);
 		// build main options before element iteration
 		opts = $.extend({}, $.jgrid.formatter, opts);
 		return this.each(function() {
@@ -110,8 +111,8 @@
 		    	monthNames: opts.monthNames
 			};
 			format = format.toLowerCase();
-		    date = date.split(/[\\\/:_;.\s-]/);
-		    format = format.split(/[\\\/:_;.\s-]/);
+			date = date.split(/[\\\/:_;.tT\s-]/);
+			format = format.split(/[\\\/:_;.tT\s-]/);
 			// !!!!!!!!!!!!!!!!!!!!!!
 			// Here additional code to parse for month names
 			// !!!!!!!!!!!!!!!!!!!!!!
@@ -203,9 +204,14 @@
         }
 	};
 	$.fn.fmatter.checkbox =function(el,cval,opts) {
+		var op = $.extend({},opts.checkbox), ds;
+		if(!isUndefined(opts.colModel.formatoptions)) {
+			op = $.extend({},op,opts.colModel.formatoptions);
+		}
+		if(op.disabled===true) {ds = "disabled";} else {ds="";}
 		cval=cval+""; cval=cval.toLowerCase();
 		var bchk = cval.search(/(false|0|no|off)/i)<0 ? " checked=\"checked\"" : "";
-        $(el).html("<input type=\"checkbox\"" + bchk  + " value=\""+ cval+"\" offval=\"no\" disabled/>");
+        $(el).html("<input type='checkbox'" + bchk  + " value='"+ cval+"' offval='no' "+ds+ "/>");
     },
 	$.fn.fmatter.link = function(el,cellval,opts) {
         if(!isEmpty(cellval)) {
@@ -215,7 +221,11 @@
         }
     };
 	$.fn.fmatter.showlink = function(el,cellval,opts) {
-		var idUrl = opts.baseLinkUrl+opts.showAction + '?id='+opts.rowId;
+		var op = {baseLinkUrl: opts.baseLinkUrl,showAction:opts.showAction, addParam: opts.addParam };
+		if(!isUndefined(opts.colModel.formatoptions)) {
+			op = $.extend({},op,opts.colModel.formatoptions);
+		}
+		idUrl = op.baseLinkUrl+op.showAction + '?id='+opts.rowId+op.addParam;
         if(isString(cellval)) {	//add this one even if its blank string
 			$(el).html("<a href=\"" + idUrl + "\">" + cellval + "</a>");
         }else {
@@ -223,28 +233,40 @@
 	    }
     };
 	$.fn.fmatter.integer = function(el,cellval,opts) {
-		var op = opts.integer;
+		var op = $.extend({},opts.integer);
+		if(!isUndefined(opts.colModel.formatoptions)) {
+			op = $.extend({},op,opts.colModel.formatoptions);
+		}
 		if(isEmpty(cellval)) {
 			cellval = op.defaultValue || 0;
 		}
 		$(el).html($.fmatter.util.NumberFormat(cellval,op));
 	};
 	$.fn.fmatter.number = function (el,cellval, opts) {
-		var op = opts.number;
+		var op = $.extend({},opts.number);
+		if(!isUndefined(opts.colModel.formatoptions)) {
+			op = $.extend({},op,opts.colModel.formatoptions);
+		}
 		if(isEmpty(cellval)) {
 			cellval = op.defaultValue || 0;
 		}
 		$(el).html($.fmatter.util.NumberFormat(cellval,op));
 	};
 	$.fn.fmatter.currency = function (el,cellval, opts) {
-		var op = opts.currency;
+		var op = $.extend({},opts.currency);
+		if(!isUndefined(opts.colModel.formatoptions)) {
+			op = $.extend({},op,opts.colModel.formatoptions);
+		}
 		if(isEmpty(cellval)) {
 			cellval = op.defaultValue || 0;
 		}
 		$(el).html($.fmatter.util.NumberFormat(cellval,op));
 	};
 	$.fn.fmatter.date = function (el, cellval, opts, act) {
-		var op = opts.date;
+		var op = $.extend({},opts.date);
+		if(!isUndefined(opts.colModel.formatoptions)) {
+			op = $.extend({},op,opts.colModel.formatoptions);
+		}
 		if(!op.reformatAfterEdit && act=='edit'){
 			$.fn.fmatter.defaultFormat(el,cellval);
 		} else if(!isEmpty(cellval)) {
@@ -255,38 +277,54 @@
 		}
 	};
 	$.fn.fmatter.select = function (el, cellval,opts, act) {
+		// jqGrid specific
 		if(act=='edit') {
 			$.fn.fmatter.defaultFormat(el,cellval);
 		} else if (!isEmpty(cellval)) {
-			var oSelect = opts.colModel.editoptions.value;
+			var oSelect = false;
+			if(!isUndefined(opts.colModel.editoptions)){
+				oSelect= opts.colModel.editoptions.value;
+			}
 			if (oSelect) {
-				var ret;
+				var ret = [];
+				var msl =  opts.colModel.editoptions.multiple === true ? true : false;
+				var scell = [];
+				if(msl) { scell = cellval.split(","); scell = $.map(scell,function(n){return $.trim(n);})}
 				if (isString(oSelect)) {
-					var so = oSelect.split(";");
+					// mybe here we can use some caching with care ????
+					var so = oSelect.split(";"), j=0;
 					for(var i=0; i<so.length;i++){
 						sv = so[i].split(":");
-						if($.trim(sv[0])==$.trim(cellval)) {
-							ret = sv[1];
+						if(msl) {
+							if(jQuery.inArray(sv[0],scell)>-1) {
+								ret[j] = sv[1];
+								j++;
+							}
+						} else if($.trim(sv[0])==$.trim(cellval)) {
+							ret[0] = sv[1];
 							break;
 						}
 					}
-					
 				} else if(isObject(oSelect)) {
-					// this is quick
-					ret = oSelect[cellval] || "";
+					// this is quicker
+					if(msl) {
+						ret = jQuery.map(scel, function(n, i){
+							return oSelect[n];
+						});
+					}
+					ret[0] = oSelect[cellval] || "";
 				}
-				$(el).html(ret);
+				$(el).html(ret.join(", "));
 			} else {
 				$.fn.fmatter.defaultFormat(el,cellval);
 			}
 		}
 	};
-	$.unformat = function (cellval,options,pos) {
-		var formatType = options.colModel.formatter;
-		var ret;
+	$.unformat = function (cellval,options,pos,cnt) {
+		// specific for jqGrid only
+		var ret, formatType = options.colModel.formatter, op =options.colModel.formatoptions || {};
 		if(formatType !== 'undefined' && isString(formatType) ) {
-			var opts = $.jgrid.formatter || {};
-			var stripTag = eval("/"+opts.currency.thousandsSeparator+"/g");
+			var opts = $.jgrid.formatter || {}, stripTag;
 			switch(formatType) {
 				case 'link' :
 				case 'showlink' :
@@ -294,23 +332,30 @@
 					ret= $(cellval).text();
 					break;
 				case 'integer' :
+					op = $.extend({},opts.integer,op);
+					stripTag = eval("/"+op.thousandsSeparator+"/g");
 					ret = $(cellval).text().replace(stripTag,'');
 					break;
 				case 'number' :
-					ret = $(cellval).text().replace(opts.number.decimalSeparator,'.').replace(stripTag,"");
+					op = $.extend({},opts.number,op);
+					stripTag = eval("/"+op.thousandsSeparator+"/g");
+					ret = $(cellval).text().replace(op.decimalSeparator,'.').replace(stripTag,"");
 					break;
 				case 'currency':
-					ret = $(cellval).text().replace(opts.currency.decimalSeparator,'.').replace(opts.currency.prefix,'').replace(opts.currency.suffix,'').replace(stripTag,'');
+					op = $.extend({},opts.currency,op);
+					stripTag = eval("/"+op.thousandsSeparator+"/g");
+					ret = $(cellval).text().replace(op.decimalSeparator,'.').replace(op.prefix,'').replace(op.suffix,'').replace(stripTag,'');
 					break;
 				case 'checkbox' :
 					var cbv = (options.colModel.editoptions) ? options.colModel.editoptions.value.split(":") : ["Yes","No"];
 					ret = $('input',cellval).attr("checked") ? cbv[0] : cbv[1];
 					break;
 			}
-		} else {
-			// Here aditional code to run custom unformater
 		}
-		return ret ? ret : $(cellval).html();
+		//else {
+			// Here aditional code to run custom unformater
+		//}
+		return ret ? ret : cnt===true ? $(cellval).text() : $.htmlDecode($(cellval).html());
 	};
 	function fireFormatter(el,formatType,cellval, opts, act) {
 		//debug("in formatter with " +formatType);
@@ -326,12 +371,11 @@
 	        case 'checkbox': $.fn.fmatter.checkbox(el, cellval, opts); break;
 	        case 'select': $.fn.fmatter.select(el, cellval, opts,act); break;
 	        //case 'textbox': s.transparent = false; break;
-	      }
+	    }
 	};
 	//private methods and data
 	function debug($obj) {
-		//if (window.console && window.console.log)
-		//	window.console.log($obj);
+		if (window.console && window.console.log) window.console.log($obj);
 	};
 	/**
      * A convenience method for detecting a legitimate non-null value.

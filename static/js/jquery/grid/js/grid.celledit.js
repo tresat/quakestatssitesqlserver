@@ -48,7 +48,7 @@ $.fn.extend({
 					}
 				}
 				// if so check to see if the content is changed
-				var vl = $("td:eq("+$t.p.savedRow[0].ic+")>#"+$t.p.savedRow[0].id+"_"+$t.p.savedRow[0].name,$t.rows[$t.p.savedRow[0].id]).val();
+				var vl = $("td:eq("+$t.p.savedRow[0].ic+")>#"+$t.p.savedRow[0].id+"_"+$t.p.savedRow[0].name.replace('.',"\\."),$t.rows[$t.p.savedRow[0].id]).val();
 				if ($t.p.savedRow[0].v !=  vl) {
 					// save it
 					$($t).saveCell($t.p.savedRow[0].id,$t.p.savedRow[0].ic)
@@ -72,11 +72,11 @@ $.fn.extend({
 				try {
 					tmp =  $.unformat(cc,{colModel:$t.p.colModel[iCol]},iCol);
 				} catch (_) {
-					tmp = $.htmlDecode($(cc).html());
+					tmp = $(cc).html();
 				}
 				var opt = $.extend($t.p.colModel[iCol].editoptions || {} ,{id:iRow+"_"+nm,name:nm});
 				if (!$t.p.colModel[iCol].edittype) {$t.p.colModel[iCol].edittype = "text";}
-				$t.p.savedRow.push({id:iRow,ic:iCol,name:nm,v:tmp});
+				$t.p.savedRow[0] = {id:iRow,ic:iCol,name:nm,v:tmp};
 				if($.isFunction($t.p.formatCell)) {
 					var tmp2 = $t.p.formatCell($t.rows[iRow].id,nm,tmp,iRow,iCol);
 					if(tmp2) {tmp = tmp2;}
@@ -128,29 +128,29 @@ $.fn.extend({
 	},
 	saveCell : function (iRow, iCol){
 		return this.each(function(){
-			var $t= this, nm, fr=null;
+			var $t= this, nm, fr;
 			if (!$t.grid || $t.p.cellEdit !== true) {return;}
-			for( var k=0;k<$t.p.savedRow.length;k++) {
-				if ( $t.p.savedRow[k].id===iRow) {fr = k; break;}
-			};
+			if ( $t.p.savedRow.length == 1) {fr = 0;} else {fr=null;} 
 			if(fr != null) {
-				var cc = $("td:eq("+iCol+")",$t.rows[iRow]);
+				var cc = $("td:eq("+iCol+")",$t.rows[iRow]),v,v2;
 				nm = $t.p.colModel[iCol].name;
-				var v,v2;
 				switch ($t.p.colModel[iCol].edittype) {
 					case "select":
-						v = $("#"+iRow+"_"+nm+">option:selected",$t.rows[iRow]).val();
-						v2 = $("#"+iRow+"_"+nm+">option:selected",$t.rows[iRow]).text();
+						v = $("#"+iRow+"_"+nm.replace('.',"\\.")+">option:selected",$t.rows[iRow]).val();
+						v2 = $("#"+iRow+"_"+nm.replace('.',"\\.")+">option:selected",$t.rows[iRow]).text();
 						break;
 					case "checkbox":
-						var cbv = $t.p.colModel[iCol].editoptions.value.split(":") || ["Yes","No"];
-						v = $("#"+iRow+"_"+nm,$t.rows[iRow]).attr("checked") ? cbv[0] : cbv[1];
+						var cbv  = ["Yes","No"];
+						if($t.p.colModel[iCol].editoptions){
+							cbv = $t.p.colModel[iCol].editoptions.value.split(":");
+						}
+						v = $("#"+iRow+"_"+nm.replace('.',"\\."),$t.rows[iRow]).attr("checked") ? cbv[0] : cbv[1];
 						v2=v;
 						break;
 					case "password":
 					case "text":
 					case "textarea":
-						v = $("#"+iRow+"_"+nm,$t.rows[iRow]).val();
+						v = !$t.p.autoencode ? $("#"+iRow+"_"+nm.replace('.',"\\."),$t.rows[iRow]).val() : htmlEncode($("#"+iRow+"_"+nm.replace('.',"\\."),$t.rows[iRow]).val());
 						v2=v;
 						break;
 				}
@@ -252,11 +252,9 @@ $.fn.extend({
 	},
 	restoreCell : function(iRow, iCol) {
 		return this.each(function(){
-			var $t= this, nm, fr=null;
+			var $t= this, nm, fr;
 			if (!$t.grid || $t.p.cellEdit !== true ) {return;}
-			for( var k=0;k<$t.p.savedRow.length;k++) {
-				if ( $t.p.savedRow[k].id===iRow) {fr = k; break;}
-			}
+			if ( $t.p.savedRow.length == 1) {fr = 0;} else {fr=null;}
 			if(fr != null) {
 				var cc = $("td:eq("+iCol+")",$t.rows[iRow]);
 				if($.isFunction($.fn['datepicker'])) {
@@ -363,10 +361,10 @@ $.fn.extend({
 			});
 			function scrollGrid(iR, iC, tp){
 				if (tp.substr(0,1)=='v') {
-					var ch = $($t.grid.bDiv)[0].clientHeight;
-					var st = $($t.grid.bDiv)[0].scrollTop;
-					var nROT = $t.rows[iR].offsetTop+$t.rows[iR].clientHeight;
-					var pROT = $t.rows[iR].offsetTop;
+					var ch = $($t.grid.bDiv)[0].clientHeight,
+					st = $($t.grid.bDiv)[0].scrollTop,
+					nROT = $t.rows[iR].offsetTop+$t.rows[iR].clientHeight,
+					pROT = $t.rows[iR].offsetTop;
 					if(tp == 'vd') {
 						if(nROT >= ch) {
 							$($t.grid.bDiv)[0].scrollTop = $($t.grid.bDiv)[0].scrollTop + $t.rows[iR].clientHeight;
@@ -379,10 +377,10 @@ $.fn.extend({
 					}
 				}
 				if(tp=='h') {
-					var cw = $($t.grid.bDiv)[0].clientWidth;
-					var sl = $($t.grid.bDiv)[0].scrollLeft;
-					var nCOL = $t.rows[iR].cells[iC].offsetLeft+$t.rows[iR].cells[iC].clientWidth;
-					var pCOL = $t.rows[iR].cells[iC].offsetLeft;
+					var cw = $($t.grid.bDiv)[0].clientWidth,
+					sl = $($t.grid.bDiv)[0].scrollLeft,
+					nCOL = $t.rows[iR].cells[iC].offsetLeft+$t.rows[iR].cells[iC].clientWidth,
+					pCOL = $t.rows[iR].cells[iC].offsetLeft;
 					if(nCOL >= cw+parseInt(sl)) {
 						$($t.grid.bDiv)[0].scrollLeft = $($t.grid.bDiv)[0].scrollLeft + $t.rows[iR].cells[iC].clientWidth;
 					} else if (pCOL < sl) {
@@ -391,10 +389,10 @@ $.fn.extend({
 				}
 			};
 			function findNextVisible(iC,act){
-				var ind;
+				var ind, i;
 				if(act == 'lft') {
 					ind = iC+1;
-					for (var i=iC;i>=0;i--){
+					for (i=iC;i>=0;i--){
 						if ($t.p.colModel[i].hidden !== true) {
 							ind = i;
 							break;
@@ -403,7 +401,7 @@ $.fn.extend({
 				}
 				if(act == 'rgt') {
 					ind = iC-1;
-					for (var i=iC; i<$t.p.colModel.length;i++){
+					for (i=iC; i<$t.p.colModel.length;i++){
 						if ($t.p.colModel[i].hidden !== true) {
 							ind = i;
 							break;
@@ -428,10 +426,10 @@ $.fn.extend({
 						if ( nm !== 'cb' && nm !== 'subgrid') {
 							if (mthd=='dirty') {
 								if ($(this).hasClass('dirty-cell')) {
-									res[nm] = $(this).html().replace(/\&nbsp\;/ig,'');
+									res[nm] = $.htmlDecode($(this).html());
 								}
 							} else {
-								res[nm] = $(this).html().replace(/\&nbsp\;/ig,'');
+								res[nm] = $.htmlDecode($(this).html());
 							}
 						}
 					});

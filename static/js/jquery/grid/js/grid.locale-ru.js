@@ -1,6 +1,6 @@
 ;(function($){
 /**
- * jqGrid Russian Translation
+ * jqGrid Russian Translation v1.1 21.01.2009
  * Alexey Kanaev softcore@rambler.ru
  * http://softcore.com.ru 
  * Dual licensed under the MIT and GPL licenses:
@@ -68,34 +68,34 @@ $.jgrid.errors = {
 	errcap : "Ошибка",
 	nourl : "URL не установлен",
 	norecords: "Нет записей для обработки",
-    model : "Length of colNames <> colModel!"
+    model : "Число полей не соответствует числу столбцов таблицы!"
 };
 $.jgrid.formatter = {
 	integer : {thousandsSeparator: " ", defaulValue: 0},
-	number : {decimalSeparator:".", thousandsSeparator: " ", decimalPlaces: 2, defaulValue: 0},
-	currency : {decimalSeparator:".", thousandsSeparator: " ", decimalPlaces: 2, prefix: "", suffix:"", defaulValue: 0},
+	number : {decimalSeparator:",", thousandsSeparator: " ", decimalPlaces: 2, defaulValue: 0},
+	currency : {decimalSeparator:",", thousandsSeparator: " ", decimalPlaces: 2, prefix: "", suffix:"", defaulValue: 0},
 	date : {
 		dayNames:   [
-			"Sun", "Mon", "Tue", "Wed", "Thr", "Fri", "Sat",
-			"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
+			"Вс", "Пн", "Вт", "Ср", "Чт", "Пт", "Сб",
+			"Воскресение", "Понедельник", "Вторник", "Среда", "Четверг", "Пятница", "Суббота"
 		],
 		monthNames: [
-			"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-			"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"
+			"Янв", "Фев", "Мар", "Апр", "Май", "Июн", "Июл", "Авг", "Сен", "Окт", "Ноя", "Дек",
+			"Январь", "Февраль", "Март", "Апрель", "Май", "Июнь", "Июль", "Август", "Сентябрь", "Октябрь", "Ноябрь", "Декабрь"
 		],
 		AmPm : ["am","pm","AM","PM"],
 		S: function (j) {return j < 11 || j > 13 ? ['st', 'nd', 'rd', 'th'][Math.min((j - 1) % 10, 3)] : 'th'},
 		srcformat: 'Y-m-d',
-		newformat: 'd/m/Y',
+		newformat: 'd.m.Y',
 		masks : {
             ISO8601Long:"Y-m-d H:i:s",
             ISO8601Short:"Y-m-d",
-            ShortDate: "n/j/Y",
+            ShortDate: "n.j.Y",
             LongDate: "l, F d, Y",
-            FullDateTime: "l, F d, Y g:i:s A",
+            FullDateTime: "l, F d, Y G:i:s",
             MonthDay: "F d",
-            ShortTime: "g:i A",
-            LongTime: "g:i:s A",
+            ShortTime: "G:i",
+            LongTime: "G:i:s",
             SortableDateTime: "Y-m-d\\TH:i:s",
             UniversalSortableDateTime: "Y-m-d H:i:sO",
             YearMonth: "F, Y"

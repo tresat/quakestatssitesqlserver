@@ -1,7 +1,8 @@
 ;(function($){
 /**
  * jqGrid Spanish Translation
- * Traduccion jqGrid en Espa�ol por Yamil Bracho
+ * Traduccion jqGrid en Español por Yamil Bracho
+ * Traduccion corregida y ampliada por Faserline, S.L. - http://www.faserline.com
  * Dual licensed under the MIT and GPL licenses:
  * http://www.opensource.org/licenses/mit-license.php
  * http://www.gnu.org/licenses/gpl.html
@@ -9,36 +10,36 @@
 $.jgrid = {};
 
 $.jgrid.defaults = {
-	recordtext: "Fila(s)",
+	recordtext: "fila(s)",
 	loadtext: "Cargando...",
 	pgtext : "/"
 };
 $.jgrid.search = {
-    caption: "Busqueda...",
+    caption: "Búsqueda...",
     Find: "Buscar",
     Reset: "Limpiar",
     odata : ['igual', 'no igual', 'menor', 'menor o igual', 'mayor', 'mayor o igual', 'comienza con', 'termina con','contiene' ]
 };
 $.jgrid.edit = {
-    addCaption: "Agregar Registro",
-    editCaption: "Modificar Registro",
+    addCaption: "Agregar registro",
+    editCaption: "Modificar registro",
     bSubmit: "Enviar",
     bCancel: "Cancelar",
 	bClose: "Cerrar",
     processData: "Procesando...",
     msg: {
-        required:"Campo es requerido",
-        number:"Por favor, introduzca un numero",
-        minValue:"El valor debe ser mayor o igual que ",
-        maxValue:"El valor debe ser menor o igual a",
-        email: "no es un direccion de correo valida",
-        integer: "Por favor, introduzca un entero",
-		date: "Please, enter valid date value"
+        required:"Campo obligatorio",
+        number:"Introduzca un número",
+        minValue:"El valor debe ser mayor o igual a ",
+        maxValue:"El valor debe ser menor o igual a ",
+        email: "no es una dirección de correo válida",
+        integer: "Introduzca un valor entero",
+		date: "Introduza una fecha correcta "
     }
 };
 $.jgrid.del = {
     caption: "Eliminar",
-    msg: "¿ Desea eliminar los registros seleccionados ?",
+    msg: "¿Desea eliminar los registros seleccionados?",
     bSubmit: "Eliminar",
     bCancel: "Cancelar",
     processData: "Procesando..."
@@ -53,39 +54,39 @@ $.jgrid.nav = {
     searchtext: " ",
     searchtitle: "Buscar información",
     refreshtext: "",
-    refreshtitle: "Refrescar Rejilla",
+    refreshtitle: "Recargar datos",
     alertcap: "Aviso",
-    alerttext: "Por favor, seleccione una fila"
+    alerttext: "Seleccione una fila"
 };
 // setcolumns module
 $.jgrid.col ={
-    caption: "Mostrar/Ocultar Columnas",
+    caption: "Mostrar/ocultar columnas",
     bSubmit: "Enviar",
     bCancel: "Cancelar"	
 };
 $.jgrid.errors = {
 	errcap : "Error",
-	nourl : "No se ha especificado una url",
+	nourl : "No se ha especificado una URL",
 	norecords: "No hay datos para procesar",
-    model : "Length of colNames <> colModel!"
+    model : "Las columnas de nombres son diferentes de las columnas de modelo"
 };
 $.jgrid.formatter = {
-	integer : {thousandsSeparator: " ", defaulValue: 0},
-	number : {decimalSeparator:".", thousandsSeparator: " ", decimalPlaces: 2, defaulValue: 0},
-	currency : {decimalSeparator:".", thousandsSeparator: " ", decimalPlaces: 2, prefix: "", suffix:"", defaulValue: 0},
+	integer : {thousandsSeparator: ".", defaulValue: 0},
+	number : {decimalSeparator:",", thousandsSeparator: ".", decimalPlaces: 2, defaulValue: 0},
+	currency : {decimalSeparator:",", thousandsSeparator: ".", decimalPlaces: 2, prefix: "", suffix:"", defaulValue: 0},
 	date : {
 		dayNames:   [
-			"Sun", "Mon", "Tue", "Wed", "Thr", "Fri", "Sat",
-			"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
+			"Do", "Lu", "Ma", "Mi", "Ju", "Vi", "Sa",
+			"Domingo", "Lunes", "Martes", "Miercoles", "Jueves", "Viernes", "Sabado"
 		],
 		monthNames: [
-			"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-			"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"
+			"Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic",
+			"Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"
 		],
 		AmPm : ["am","pm","AM","PM"],
 		S: function (j) {return j < 11 || j > 13 ? ['st', 'nd', 'rd', 'th'][Math.min((j - 1) % 10, 3)] : 'th'},
 		srcformat: 'Y-m-d',
-		newformat: 'd/m/Y',
+		newformat: 'd-m-Y',
 		masks : {
             ISO8601Long:"Y-m-d H:i:s",
             ISO8601Short:"Y-m-d",

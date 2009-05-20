@@ -1,10 +1,11 @@
 ﻿<%@ Page Title="Quake Stats - Single Game Statistics" Language="VB" MasterPageFile="~/pages/QuakeStats.master" AutoEventWireup="false" CodeFile="GameStats.aspx.vb" Inherits="site_stats_GameStats" %>
 
 <asp:Content ID="cntHead" ContentPlaceHolderID="cphHead" Runat="Server">
-    <link rel="stylesheet" type="text/css" media="screen" href="../../static/gridThemes/basic/grid.css"/> 
-    <script src="../../static/js/jquery/jquery-1.3.min.js" type="text/javascript" language="javascript"></script>
-    <script src="../../static/js/jquery/grid/jquery.jqGrid.js" type="text/javascript" language="javascript"></script>
-    <script src="../../static/js/pages/GameStats.js" type="text/javascript" language="javascript"></script>
+    <link rel="stylesheet" type="text/css" media="screen" href="<%=Page.ResolveClientURL("../../static/css/QuakeStats.css") %>"/> 
+    <link rel="stylesheet" type="text/css" media="screen" href="../../static/gridThemes/steel/grid.css"/> 
+    <script src="<%=Page.ResolveClientURL("../../static/js/jquery/jquery.js") %>" type="text/javascript" language="javascript"></script>
+    <script src="<%=Page.ResolveClientURL("../../static/js/jquery/grid/jquery.jqGrid.js") %>" type="text/javascript" language="javascript"></script>
+    <script src="<%=Page.ResolveClientURL("../../static/js/pages/GameStats.js") %>" type="text/javascript" language="javascript"></script>
 </asp:Content>
 <asp:Content ID="cntMain" ContentPlaceHolderID="cphMain" Runat="Server">
     <div id="main">
@@ -18,8 +19,8 @@
             <Columns>
                 <asp:BoundField HeaderText="Red" DataField="RedScore" />
                 <asp:BoundField HeaderText="Blue" DataField="BlueScore" />
-                <asp:BoundField HeaderText="Complete?" DataField="IsComplete" ReadOnly="true" />
-                <asp:BoundField HeaderText="Counts Towards Lifetime Stats?" DataField="IsCounted" ReadOnly="true" />
+                <asp:BoundField HeaderText="Complete?" DataField="IsCompleteInLog" ReadOnly="true" />
+                <asp:BoundField HeaderText="Counts Towards Lifetime Stats?" DataField="IsToBeCounted" ReadOnly="true" />
             </Columns>
         </asp:GridView>
         <hr />
@@ -37,12 +38,11 @@
                 ConnectionString="<%$ ConnectionStrings:StatsDB %>"
                 ProviderName="<%$ ConnectionStrings:StatsDB.ProviderName %>"
                 SelectCommand="SELECT g.redscore, g.bluescore, 
-                                    (CASE WHEN g.IsCompleteGame = 1 THEN true ELSE false END) AS IsComplete,
-                                    (CASE WHEN g.IsToBeCounted = 1 THEN true ELSE false END) AS IsCounted
-                                FROM games g 
+                                    g.IsCompleteInLog, g.IsToBeCounted
+                                FROM CalculatedData.Game g 
                                 WHERE g.GameID = @gameid" >                
             <SelectParameters>
-                <asp:QueryStringParameter Name="gameid" DbType="VarNumeric" QueryStringField="gameid" />
+                <asp:QueryStringParameter Name="gameid" DbType="Int32" QueryStringField="gameid" />
             </SelectParameters>
         </asp:SqlDataSource>
     </div>

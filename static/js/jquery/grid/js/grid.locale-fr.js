@@ -1,6 +1,6 @@
 ;(function($){
 /**
- * jqGrid English Translation
+ * jqGrid French Translation
  * Tony Tomov tony@trirand.com
  * http://trirand.com/blog/ 
  * Dual licensed under the MIT and GPL licenses:
@@ -68,7 +68,7 @@ $.jgrid.errors = {
 	errcap : "Erreur",
 	nourl : "Aucune url paramétrée",
 	norecords: "Aucun enregistrement à traiter",
-    model : "Length of colNames <> colModel!"
+  model : "Nombre de titres (colNames) <> Nombre de données (colModel)!"
 };
 $.jgrid.formatter = {
 	integer : {thousandsSeparator: " ", defaulValue: 0},
@@ -76,16 +76,18 @@ $.jgrid.formatter = {
 	currency : {decimalSeparator:".", thousandsSeparator: " ", decimalPlaces: 2, prefix: "", suffix:"", defaulValue: 0},
 	date : {
 		dayNames:   [
-			"Sun", "Mon", "Tue", "Wed", "Thr", "Fri", "Sat",
-			"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"
+			"Dim", "Lun", "Mar", "Mer", "Jeu", "Ven", "Sam",
+			"Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"
 		],
 		monthNames: [
-			"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
-			"January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"
+			"Jan", "Fev", "Mar", "Avr", "Mai", "Jui", "Jul", "Aou", "Sep", "Oct", "Nov", "Dec",
+			"Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Saptembre", "Octobre", "Novembre", "Décembre"
 		],
 		AmPm : ["am","pm","AM","PM"],
 		S: function (j) {return j < 11 || j > 13 ? ['st', 'nd', 'rd', 'th'][Math.min((j - 1) % 10, 3)] : 'th'},
-		srcformat: 'Y-m-d',
+	/*
+	// Original version
+	srcformat: 'Y-m-d',
 		newformat: 'd/m/Y',
 		masks : {
             ISO8601Long:"Y-m-d H:i:s",
@@ -99,6 +101,24 @@ $.jgrid.formatter = {
             SortableDateTime: "Y-m-d\\TH:i:s",
             UniversalSortableDateTime: "Y-m-d H:i:sO",
             YearMonth: "F, Y"
+        },
+        reformatAfterEdit : false
+	},
+	*/
+	srcformat: 'Y-m-d',
+		newformat: 'd/m/Y',
+		masks : {
+            ISO8601Long:"d-m-Y H:i:s",
+            ISO8601Short:"d-m-Y",
+            ShortDate: "j/n/Y",
+            LongDate: "l d F Y",
+            FullDateTime: "l d F Y, G:i:s",
+            MonthDay: "d F",
+            ShortTime: "G:i",
+            LongTime: "G:i:s",
+            SortableDateTime: "d-m-Y\\TH:i:s",
+            UniversalSortableDateTime: "d-m-Y H:i:sO",
+            YearMonth: "F Y"
         },
         reformatAfterEdit : false
 	},
