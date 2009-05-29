@@ -1,6 +1,10 @@
 ﻿Option Explicit On
 Option Strict On
 
+'
+' This page still uses MYSQL tables which don't exist in testing db, won't work
+'
+
 Imports System.Configuration
 Imports System.Data.SqlClient
 

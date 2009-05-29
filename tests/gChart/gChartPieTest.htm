@@ -1,0 +1,40 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>gChart Pie Chart</title>
+    
+    <style type="text/css">
+        #pieChart
+        {
+            width: 700px;
+            height: 700px;
+        }
+    </style>
+    
+    <script type="text/javascript" src="../../static/js/jquery/jquery.js"></script>
+
+    <script type="text/javascript" src="../../static/js/jquery/gChart/jquery.gchart.js"></script>
+
+    <script type="text/javascript">
+        $(function() {
+        var data = [$.gchart.series('blah', // label (unused)
+                                    [91.80, 12.83, 16.06], // data values array
+                                    ['red', '382938', '4f4f4f'] // colors array
+        )];
+
+            $('#pieChart').gchart({
+                type: 'pie',
+                series: data,
+                dataLabels: ['John', 'Jane', 'Zoe'],
+                
+                title: 'Ages of Characters|From The Last Colony',
+                titleColor: '9ACC12',
+                backgroundColor: '8a8a8a'
+            });
+        });
+    </script>
+</head>
+<body>
+     <div id="pieChart" />
+</body>
+</html>

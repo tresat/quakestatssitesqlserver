@@ -1,0 +1,37 @@
+﻿<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>jgCharts Demo</title>
+    
+    <!-- Of course we should load the jquery library -->
+    <script src="../../static/js/jquery/jquery.js" type="text/javascript"></script>
+
+    <!-- and at end the jgCharts Java Script file -->
+    <script src="../../static/js/jquery/jgcharts/jgcharts.js" type="text/javascript"></script>
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            var api = new jGCharts.Api();
+            
+            jQuery('<img>')
+            .attr('src', api.make({
+                title: 'My+First+Pie+Chart|My+Very+First+Google+Chart+Ever',
+                type: 'p3',
+                
+                data: [[153], [15], [8]],
+                axis_labels: ['Bob', 'John', 'Lisa'],
+                colors: ['0000FF', 'ffffff', 'aaaaaa'], 
+                
+                size: '400x200',
+            }))
+            .appendTo("#chart");
+        });
+    </script>
+</head>
+<body>
+    <div id="chart">
+    
+    </div>
+</body>
+</html>
