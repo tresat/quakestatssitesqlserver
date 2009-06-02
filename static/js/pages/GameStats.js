@@ -36,7 +36,7 @@ $(function() {
         height: 'auto',
         loadonce: true,
         postData: { idrow: 0, // unique row used as id
-            proc: 'GridProcedures.spGetGameResults', // stored procedure to call (must be in approved list for user)
-            arg0: mintGameID } // all other arguments starting with 'arg' are params to proc
+                    proc: 'DataProcedures.spGetGameResults', // stored procedure to call (must be in approved list for user)
+                    arg0: mintGameID } // all other arguments starting with 'arg' are params to proc
     });
 });

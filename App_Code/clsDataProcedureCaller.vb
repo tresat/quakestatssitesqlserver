@@ -6,13 +6,68 @@ Imports System.Collections.Generic
 
 Namespace Security
     Public Class clsDataProcedureCaller
-        Private mstrStatsConnectionString As String
+#Region "Inner Types"
+        Protected Enum ProcedureType
+            GridProcedure = 1
+            ChartProcedure = 2
+        End Enum
 
+        Public Structure ChartData
+            Public Label As String
+            Public Data As Object
+
+            Public Sub New(ByVal pstrLabel As String, ByVal pobjData As Object)
+                Label = pstrLabel
+                Data = pobjData
+            End Sub
+        End Structure
+#End Region
+
+#Region "Member Vars"
+        Private mstrStatsConnectionString As String
+#End Region
+
+#Region "Constructors"
         Public Sub New(ByVal pstrStatsConnectionString As String)
             mstrStatsConnectionString = pstrStatsConnectionString
         End Sub
+#End Region
 
-        Public Function CallProcedure(ByVal pstrProcedureName As String, _
+#Region "Public Functionality"
+        Public Function CallChartProcedure(ByVal pstrProcedureName As String, _
+                                      ByVal plstArgs As List(Of String)) As List(Of ChartData)
+            Dim sqlcmdCall As SqlCommand
+            Dim lstData As New List(Of ChartData)
+
+            Using cxnDB As SqlConnection = GetConnection()
+                'Ensure current user has access to the called data procedure
+                If Not VerifyUserCanAccessProcedure(pstrProcedureName, ProcedureType.ChartProcedure) Then
+                    Throw New Exception("User: " & Membership.GetUser.UserName & " does not have access to procedure: " & pstrProcedureName)
+                End If
+
+                'Build sql string.  Add 1 param for each in pastringargs.  We'll 
+                'call the argX, where X will count from 0.  They() 'll be populated
+                'in the same order they came across the AJAX call.
+                'Create the command and add each of the procedure parameters.
+                sqlcmdCall = New SqlCommand(pstrProcedureName, cxnDB)
+                sqlcmdCall.CommandType = Data.CommandType.StoredProcedure
+                For intIdx As Integer = 0 To plstArgs.Count - 1
+                    sqlcmdCall.Parameters.AddWithValue("pProcSpecificParam" + CStr(intIdx), CInt(plstArgs(intIdx)))
+                Next
+
+                'Call the procedure
+                Using reader As SqlDataReader = sqlcmdCall.ExecuteReader
+                    'The first resultset is the particular data of the proc
+                    While reader.Read()
+                        lstData.Add(New ChartData(CStr(reader("WeaponName")), reader("Kills")))
+                    End While
+                End Using
+            End Using
+
+            Return lstData
+        End Function
+
+        Public Function CallGridProcedure(ByVal pstrProcedureName As String, _
                                       ByVal plstArgs As List(Of String), _
                                       ByVal pintIDCol As Integer, _
                                       ByVal plngPageNo As Long, _
@@ -31,7 +86,7 @@ Namespace Security
 
             Using cxnDB As SqlConnection = GetConnection()
                 'Ensure current user has access to the called data procedure
-                If Not VerifyUserCanAccessProcedure(pstrProcedureName) Then
+                If Not VerifyUserCanAccessProcedure(pstrProcedureName, ProcedureType.GridProcedure) Then
                     Throw New Exception("User: " & Membership.GetUser.UserName & " does not have access to procedure: " & pstrProcedureName)
                 End If
 
@@ -98,13 +153,15 @@ Namespace Security
                 'If for some reasons the requested page is greater than the total 
                 'then call again, using last page
                 If plngPageNo > lngTotalPages Then
-                    strResultXML = CallProcedure(pstrProcedureName, plstArgs, pintIDCol, lngTotalPages, plngRowCount, pintSortCol, pstrSortOrder)
+                    strResultXML = CallGridProcedure(pstrProcedureName, plstArgs, pintIDCol, lngTotalPages, plngRowCount, pintSortCol, pstrSortOrder)
                 End If
             End Using
 
             Return strResultXML
         End Function
+#End Region
 
+#Region "Private Helpers"
         Private Function GetConnection() As SqlConnection
             Dim cxnStatsDB As SqlConnection
 
@@ -119,16 +176,25 @@ Namespace Security
             Return cxnStatsDB
         End Function
 
-        Private Function VerifyUserCanAccessProcedure(ByVal pstrProcedureName As String) As Boolean
+        Private Function VerifyUserCanAccessProcedure(ByVal pstrProcedureName As String, ByVal penuProcedureType As ProcedureType) As Boolean
             Dim astrRoles() As String = Roles.GetRolesForUser(Membership.GetUser().UserName)
-            Dim strSQL As String = "SELECT Count(*) " & _
-                                    "FROM SiteData.DataProcedure dp " & _
-                                    "   INNER JOIN SiteData.DataProcedureSecurity dps ON dps.fkDataProcedureID = dp.DataProcedureID " & _
-                                    "WHERE dp.DataProcedureName = @Name " & _
-                                    "   AND dps.RoleName = @Role " & _
-                                    "   AND dp.IsGridProcedure = 1 "
+            Dim strSQL As String
             Dim sqlcmdVerify As SqlCommand
             Dim blnResult As Boolean = False
+
+            strSQL = "SELECT Count(*) " & _
+                    "FROM SiteData.DataProcedure dp " & _
+                    "   INNER JOIN SiteData.DataProcedureSecurity dps ON dps.fkDataProcedureID = dp.DataProcedureID " & _
+                    "WHERE dp.DataProcedureName = @Name " & _
+                    "   AND dps.RoleName = @Role "
+            Select Case penuProcedureType
+                Case ProcedureType.GridProcedure
+                    strSQL &= "AND dp.IsGridProcedure = 1 "
+                Case ProcedureType.ChartProcedure
+                    strSQL &= "AND dp.IsChartProcedure = 1 "
+                Case Else
+                    Throw New Exception("Unknown proc type: " & penuProcedureType)
+            End Select
 
             Using cxnDB As SqlConnection = GetConnection()
                 For Each strRole As String In astrRoles
@@ -145,5 +211,6 @@ Namespace Security
 
             Return blnResult
         End Function
+#End Region
     End Class
 End Namespace

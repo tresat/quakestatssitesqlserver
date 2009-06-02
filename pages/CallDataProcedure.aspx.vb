@@ -57,7 +57,7 @@ Partial Class pages_CallDataProcedure
         Loop
 
         'Get the data XML string by calling the procedure
-        strXML = mobjCaller.CallProcedure(Request.Form("proc"), _
+        strXML = mobjCaller.CallGridProcedure(Request.Form("proc"), _
                 lstArgs, _
                 CInt(Request.Form("idrow")), _
                 CLng(Request.Form("page")), _

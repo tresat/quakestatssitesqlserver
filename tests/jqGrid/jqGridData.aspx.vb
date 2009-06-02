@@ -5,6 +5,8 @@ Option Strict On
 ' This page still uses MYSQL tables which don't exist in testing db, won't work
 '
 
+'TODO: to make test pages secure, need to convert all to .aspx pages
+
 Imports System.Configuration
 Imports System.Data.SqlClient
 
