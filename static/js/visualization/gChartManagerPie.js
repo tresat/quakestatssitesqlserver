@@ -26,15 +26,25 @@ var GChartManagerPie = new JS.Class(GChartManagerBase, {
             success: function(response) {
                 manager._rawData = (typeof response.d) == 'string' ? JSON.parse(response.d) : response.d;
 
-                manager._drawPieChart(chartSelector, 
+                $(chartSelector).empty();
+
+                manager._drawPieChart(chartSelector,
                                       manager._buildDataSeries(chartArgs, colorMapper),
                                       manager._buildDataLabels(nameMapper),
                                       chartArgs);
+
+                $('.pieContainer').corner({ tl: { radius: 6 },
+                    tr: { radius: 6 },
+                    bl: { radius: 6 },
+                    br: { radius: 6 }
+                });
             },
             failure: function(msg) {
                 alert('Failure: ' + response.d);
             }
         });
+        
+        $(chartSelector).append("<img src='../../static/img/redflaggif.gif' alt='ajax-loader'></img>");
     },
 
     /*

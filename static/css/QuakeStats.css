@@ -7,3 +7,16 @@
 {
     display: none;
 }
+
+/*
+    Pie chart styles.
+*/
+
+.pieContainer
+{
+    border: solid 1px black;
+    width: 700px;
+    height: 400px;
+    vertical-align: middle;
+    text-align: center;
+}
