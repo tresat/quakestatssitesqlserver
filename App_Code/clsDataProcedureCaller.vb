@@ -6,6 +6,10 @@ Imports System.Collections.Generic
 
 Namespace Security
     Public Class clsDataProcedureCaller
+#Region "Constants"
+        Protected Const MINT_DEFAULT_PROC_TIMEOUT As Integer = 30000
+#End Region
+
 #Region "Inner Types"
         Protected Enum ProcedureType
             GridProcedure = 1
@@ -51,6 +55,7 @@ Namespace Security
                 'Create the command and add each of the procedure parameters.
                 sqlcmdCall = New SqlCommand(pstrProcedureName, cxnDB)
                 sqlcmdCall.CommandType = Data.CommandType.StoredProcedure
+                sqlcmdCall.CommandTimeout = MINT_DEFAULT_PROC_TIMEOUT
                 For intIdx As Integer = 0 To plstArgs.Count - 1
                     sqlcmdCall.Parameters.AddWithValue("pProcSpecificParam" + CStr(intIdx), CInt(plstArgs(intIdx)))
                 Next
@@ -105,6 +110,7 @@ Namespace Security
                 'Create the command and add each of the procedure parameters.
                 sqlcmdCall = New SqlCommand(strSQL, cxnDB)
                 sqlcmdCall.CommandType = Data.CommandType.StoredProcedure
+                sqlcmdCall.CommandTimeout = MINT_DEFAULT_PROC_TIMEOUT
                 For intIdx As Integer = 0 To plstArgs.Count - 1
                     sqlcmdCall.Parameters.AddWithValue("pProcSpecificParam" + CStr(intIdx), CInt(plstArgs(intIdx)))
                 Next

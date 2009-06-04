@@ -1,0 +1,35 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual Studio 2008
+Project("{E24C65DC-7377-472B-9ABA-BC803B73C61A}") = "QuakeStats", "http://localhost/QuakeStats", "{D1FF6B0B-FF2B-4A99-83B4-18D5550491EC}"
+	ProjectSection(WebsiteProperties) = preProject
+		TargetFramework = "3.5"
+		Debug.AspNetCompiler.VirtualPath = "/QuakeStats"
+		Debug.AspNetCompiler.PhysicalPath = "..\..\..\..\..\..\Projects\QuakeStats\sqlserver_version\QuakeStatsSite\"
+		Debug.AspNetCompiler.TargetPath = "PrecompiledWeb\QuakeStats\"
+		Debug.AspNetCompiler.Updateable = "true"
+		Debug.AspNetCompiler.ForceOverwrite = "true"
+		Debug.AspNetCompiler.FixedNames = "false"
+		Debug.AspNetCompiler.Debug = "True"
+		Release.AspNetCompiler.VirtualPath = "/QuakeStats"
+		Release.AspNetCompiler.PhysicalPath = "..\..\..\..\..\..\Projects\QuakeStats\sqlserver_version\QuakeStatsSite\"
+		Release.AspNetCompiler.TargetPath = "PrecompiledWeb\QuakeStats\"
+		Release.AspNetCompiler.Updateable = "true"
+		Release.AspNetCompiler.ForceOverwrite = "true"
+		Release.AspNetCompiler.FixedNames = "false"
+		Release.AspNetCompiler.Debug = "False"
+		SlnRelativePath = "..\..\..\..\..\..\Projects\QuakeStats\sqlserver_version\QuakeStatsSite\"
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D1FF6B0B-FF2B-4A99-83B4-18D5550491EC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D1FF6B0B-FF2B-4A99-83B4-18D5550491EC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
